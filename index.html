@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחלק קבוצות כדורגל</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        #playerForm, #teamForm, #results {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            color: #bbb;
+            font-size: 2em;
+            padding: 0 0.1em;
+            cursor: pointer;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #ffca08;
+        }
+        #playerCount {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .star-rating label {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>מחלק קבוצות כדורגל</h1>
+    
+    <div id="playerForm">
+        <h2>הוסף שחקנים</h2>
+        <div id="playerCount">מספר שחקנים: 0</div>
+        <input type="text" id="playerName" placeholder="שם השחקן" onkeypress="if(event.keyCode==13) focusTalent()">
+        <div>
+            <label>כישרון:</label>
+            <div class="star-rating" id="talentRating">
+                <input type="radio" id="talent5" name="talent" value="5" onclick="focusEnergy()"><label for="talent5">★</label>
+                <input type="radio" id="talent4" name="talent" value="4" onclick="focusEnergy()"><label for="talent4">★</label>
+                <input type="radio" id="talent3" name="talent" value="3" onclick="focusEnergy()"><label for="talent3">★</label>
+                <input type="radio" id="talent2" name="talent" value="2" onclick="focusEnergy()"><label for="talent2">★</label>
+                <input type="radio" id="talent1" name="talent" value="1" onclick="focusEnergy()"><label for="talent1">★</label>
+            </div>
+        </div>
+        <div>
+            <label>אנרגיה:</label>
+            <div class="star-rating" id="energyRating">
+                <input type="radio" id="energy5" name="energy" value="5"><label for="energy5">★</label>
+                <input type="radio" id="energy4" name="energy" value="4"><label for="energy4">★</label>
+                <input type="radio" id="energy3" name="energy" value="3"><label for="energy3">★</label>
+                <input type="radio" id="energy2" name="energy" value="2"><label for="energy2">★</label>
+                <input type="radio" id="energy1" name="energy" value="1"><label for="energy1">★</label>
+            </div>
+        </div>
+        <button onclick="addPlayer()">הוסף שחקן</button>
+    </div>
+
+    <div id="teamForm">
+        <h2>חלק לקבוצות</h2>
+        <input type="number" id="teamCount" placeholder="מספר קבוצות">
+        <button onclick="divideTeams()">חלק קבוצות</button>
+        <button onclick="shuffleAndDivide()">ערבב וחלק מחדש</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let players = [];
+
+        function addPlayer() {
+            const name = document.getElementById('playerName').value;
+            const talent = document.querySelector('input[name="talent"]:checked')?.value;
+            const energy = document.querySelector('input[name="energy"]:checked')?.value;
+            
+            if (name && talent && energy) {
+                players.push({name, talent: parseInt(talent), energy: parseInt(energy)});
+                updatePlayerList();
+                clearInputs();
+                document.getElementById('playerName').focus();
+            } else {
+                alert('נא להזין שם, ניקוד כישרון, וניקוד אנרגיה');
+            }
+        }
+
+        function clearInputs() {
+            document.getElementById('playerName').value = '';
+            document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+        }
+
+        function updatePlayerList() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>רשימת שחקנים:</h2>';
+            players.forEach(player => {
+                results.innerHTML += `<p>${player.name}: כישרון - ${'★'.repeat(player.talent)}, אנרגיה - ${'★'.repeat(player.energy)}</p>`;
+            });
+            document.getElementById('playerCount').innerText = `מספר שחקנים: ${players.length}`;
+        }
+
+        function divideTeams() {
+            const teamCount = parseInt(document.getElementById('teamCount').value);
+            if (teamCount > 0 && teamCount <= players.length) {
+                const teams = dividePlayers(players, teamCount);
+                displayTeams(teams);
+            } else {
+                alert('נא להזין מספר קבוצות תקין');
+            }
+        }
+
+        function shuffleAndDivide() {
+            players = shuffle(players);
+            divideTeams();
+        }
+
+        function dividePlayers(players, teamCount) {
+            const teams = Array.from({length: teamCount}, () => ({
+                members: [],
+                totalTalent: 0,
+                totalEnergy: 0
+            }));
+            
+            // מיון השחקנים לפי כישרון (מהגבוה לנמוך)
+            const sortedPlayers = [...players].sort((a, b) => b.talent - a.talent);
+            
+            // חלוקה ראשונית לפי כישרון
+            sortedPlayers.forEach(player => {
+                // מצא את הקבוצה עם סך הכישרון הנמוך ביותר
+                const targetTeam = teams.reduce((min, team) => 
+                    team.totalTalent < min.totalTalent ? team : min
+                );
+                
+                targetTeam.members.push(player);
+                targetTeam.totalTalent += player.talent;
+                targetTeam.totalEnergy += player.energy;
+            });
+            
+            // ניסיון לאזן את האנרגיה
+            let improved = true;
+            while (improved) {
+                improved = false;
+                for (let i = 0; i < teams.length; i++) {
+                    for (let j = i + 1; j < teams.length; j++) {
+                        if (trySwapPlayers(teams[i], teams[j])) {
+                            improved = true;
+                        }
+                    }
+                }
+            }
+            
+            return teams.map(team => team.members);
+        }
+
+        function trySwapPlayers(team1, team2) {
+            for (let i = 0; i < team1.members.length; i++) {
+                for (let j = 0; j < team2.members.length; j++) {
+                    const player1 = team1.members[i];
+                    const player2 = team2.members[j];
+                    
+                    // בדוק אם החלפה תשפר את האיזון
+                    if (Math.abs((team1.totalEnergy - player1.energy + player2.energy) - 
+                                 (team2.totalEnergy - player2.energy + player1.energy)) 
+                        Math.abs(team1.totalEnergy - team2.totalEnergy)) {
+                        
+                        // בצע החלפה
+                        team1.members[i] = player2;
+                        team2.members[j] = player1;
+                        
+                        team1.totalTalent = team1.totalTalent - player1.talent + player2.talent;
+                        team2.totalTalent = team2.totalTalent - player2.talent + player1.talent;
+                        
+                        team1.totalEnergy = team1.totalEnergy - player1.energy + player2.energy;
+                        team2.totalEnergy = team2.totalEnergy - player2.energy + player1.energy;
+                        
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function displayTeams(teams) {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>קבוצות:</h2>';
+            teams.forEach((team, index) => {
+                const totalTalent = team.reduce((sum, player) => sum + player.talent, 0);
+                const totalEnergy = team.reduce((sum, player) => sum + player.energy, 0);
+                results.innerHTML += `
+                    <h3>קבוצה ${index + 1}</h3>
+                    <p>סה"כ כישרון: ${totalTalent}, סה"כ אנרגיה: ${totalEnergy}</p>
+                    <ul>
+                        ${team.map(player => `<li>${player.name}: כישרון - ${'★'.repeat(player.talent)}, אנרגיה - ${'★'.repeat(player.energy)}</li>`).join('')}
+                    </ul>
+                `;
+            });
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function focusTalent() {
+            document.getElementById('talent1').focus();
+        }
+
+        function focusEnergy() {
+            document.getElementById('energy1').focus();
+        }
+    </script>
+</body>
+</html>
