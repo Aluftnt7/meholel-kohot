@@ -2,8 +2,8 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מחלק קבוצות כדורגל</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>מחולל הכוחות 2.0/title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,7 +75,7 @@
     </style>
 </head>
 <body>
-    <h1>מחלק קבוצות כדורגל</h1>
+    <h1>מחולל כוחות 2.0</h1>
     
     <div id="playerForm">
         <h2>הוסף שחקנים</h2>
@@ -199,33 +199,32 @@
         }
 
         function trySwapPlayers(team1, team2) {
-            for (let i = 0; i < team1.members.length; i++) {
-                for (let j = 0; j < team2.members.length; j++) {
-                    const player1 = team1.members[i];
-                    const player2 = team2.members[j];
-                    
-                    // בדוק אם החלפה תשפר את האיזון
-                    if (Math.abs((team1.totalEnergy - player1.energy + player2.energy) - 
-                                 (team2.totalEnergy - player2.energy + player1.energy)) 
-                        Math.abs(team1.totalEnergy - team2.totalEnergy)) {
-                        
-                        // בצע החלפה
-                        team1.members[i] = player2;
-                        team2.members[j] = player1;
-                        
-                        team1.totalTalent = team1.totalTalent - player1.talent + player2.talent;
-                        team2.totalTalent = team2.totalTalent - player2.talent + player1.talent;
-                        
-                        team1.totalEnergy = team1.totalEnergy - player1.energy + player2.energy;
-                        team2.totalEnergy = team2.totalEnergy - player2.energy + player1.energy;
-                        
-                        return true;
-                    }
-                }
+    for (let i = 0; i < team1.members.length; i++) {
+        for (let j = 0; j < team2.members.length; j++) {
+            const player1 = team1.members[i];
+            const player2 = team2.members[j];
+            
+            // בדוק אם החלפה תשפר את האיזון
+            if (Math.abs((team1.totalEnergy - player1.energy + player2.energy) - 
+                         (team2.totalEnergy - player2.energy + player1.energy)) <
+                Math.abs(team1.totalEnergy - team2.totalEnergy)) {
+                
+                // בצע החלפה
+                team1.members[i] = player2;
+                team2.members[j] = player1;
+                
+                team1.totalTalent = team1.totalTalent - player1.talent + player2.talent;
+                team2.totalTalent = team2.totalTalent - player2.talent + player1.talent;
+                
+                team1.totalEnergy = team1.totalEnergy - player1.energy + player2.energy;
+                team2.totalEnergy = team2.totalEnergy - player2.energy + player1.energy;
+                
+                return true;
             }
-            return false;
         }
-
+    }
+    return false;
+}
         function displayTeams(teams) {
             const results = document.getElementById('results');
             results.innerHTML = '<h2>קבוצות:</h2>';
